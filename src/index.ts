@@ -107,6 +107,13 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
     return scope.join(MicrosoftStrategyScopeSeperator);
   }
 
+  protected authorizationParams(params: URLSearchParams): URLSearchParams {
+    // Passing the 'prompt' value is needed to get correct logout behaviour
+    // https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc#send-the-sign-in-request
+    if (this.prompt) params.set("prompt", this.prompt);
+    return params;
+  }
+
   protected async userProfile({
     access_token,
   }: TokenResponseBody): Promise<MicrosoftProfile> {
