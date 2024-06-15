@@ -9,12 +9,15 @@ const config: Config.InitialOptions = {
   collectCoverageFrom: ["<rootDir>/src/**/*.ts"],
   setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
   testMatch: ["<rootDir>/test/**/*.test.ts"],
+  preset: 'ts-jest',
   transform: {
-    "\\.[jt]sx?$": [
-      "babel-jest",
-      { configFile: "./config/jest/babel.config.js" },
-    ],
+    '^.+\\.(ts|tsx)?$': 'ts-jest',
+    '^.+\\.(js|jsx)$': [
+      'babel-jest',
+      { configFile: "./config/jest/babel.config.cjs" },
+    ]
   },
+  "transformIgnorePatterns": ["node_modules/(?!(.*(remix-auth-oauth2|\@oslojs/*))/)"],
 };
 
 export default config;
