@@ -1,5 +1,5 @@
 {
-  "name": "@speechmatics/remix-auth-microsoft",
+  "name": "@interrobangc/remix-auth-microsoft",
   "version": "3.0.0",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
