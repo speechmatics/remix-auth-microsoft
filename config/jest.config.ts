@@ -18,12 +18,6 @@ const config: Config.InitialOptions = {
     ]
   },
   "transformIgnorePatterns": ["node_modules/(?!(.*(remix-auth-oauth2|\@oslojs/*))/)"],
-  // transform: {
-  //   "\\.[jt]sx?$": [
-  //     "babel-jest",
-  //     { configFile: "./config/jest/babel.config.cjs" },
-  //   ],
-  // },
 };
 
 export default config;
