@@ -65,7 +65,7 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
   name = MicrosoftStrategyDefaultName;
   userInfoEndpoint: string;
   scope: string;
-  prompt: string;
+  prompt: string | undefined;
 
   constructor(
     {
@@ -92,7 +92,7 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
 
     this.userInfoEndpoint = userInfoEndpoint;
     this.scope = this.getScope(options.scopes);
-    this.prompt = options.prompt ?? "none";
+    this.prompt = options.prompt;
   }
 
   //Allow users the option to pass a scope string, or typed array
