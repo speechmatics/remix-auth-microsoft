@@ -36,8 +36,8 @@ export interface MicrosoftProfile extends OAuth2Profile {
   _json: {
     sub: string;
     name: string;
-    familyname: string;
-    givenname: string;
+    family_name: string;
+    given_name: string;
     email: string;
   };
 }
@@ -128,8 +128,8 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
       displayName: data.name,
       id: data.sub,
       name: {
-        familyName: data.familyname,
-        givenName: data.givenname,
+        familyName: data.family_name,
+        givenName: data.given_name,
       },
       emails: [{ value: data.email }],
       _json: data,
