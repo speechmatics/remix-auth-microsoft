@@ -1,5 +1,5 @@
 import { StrategyVerifyCallback } from "remix-auth";
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from "jwt-decode";
 import { z } from "zod";
 
 import {
@@ -76,7 +76,7 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
     verify: StrategyVerifyCallback<
       User,
       OAuth2StrategyVerifyParams<MicrosoftProfile, MicrosoftExtraParams>
-    >
+    >,
   ) {
     const authorizationEndpoint = policy
       ? `https://${domain}/${tenantId}/${policy}/oauth2/v2.0/authorize`
@@ -97,7 +97,7 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
   private getScope(scope: MicrosoftStrategyOptions["scopes"]) {
     if (!scope) {
       return MicrosoftStrategyDefaultScopes.join(
-        MicrosoftStrategyScopeSeperator
+        MicrosoftStrategyScopeSeperator,
       );
     } else if (typeof scope === "string") {
       return scope;
@@ -122,15 +122,24 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
 
     const { name, sub, upn, email, family_name, given_name } = jwtData.data;
 
+    const emails = [];
+    if (upn) emails.push({ value: upn, type: "primary" });
+    // This is a bit hacky, but better than throwing the profile email blindly into the return
+    if (email)
+      emails.push({ value: email, type: upn ? "unverified" : "primary" });
+
     const profile: MicrosoftProfile = {
       provider: MicrosoftStrategyDefaultName,
       displayName: name,
       id: sub,
-      emails: upn ? [{ value: upn }] : email ? [{ value: email }] : undefined,
-      name: (family_name || given_name) ? {
-        familyName: family_name,
-        givenName: given_name
-      } : undefined,
+      emails,
+      name:
+        family_name || given_name
+          ? {
+              familyName: family_name,
+              givenName: given_name,
+            }
+          : undefined,
       _json: jwtData.data,
     };
 
