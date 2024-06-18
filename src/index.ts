@@ -11,7 +11,7 @@ import {
 /**
  * @see https://learn.microsoft.com/en-us/azure/active-directory/develop/scopes-oidc#openid-connect-scopes
  */
-export type MicrosoftScope = "openid" | "email" | "profile" | "offline_access";
+export type MicrosoftScope = "openid" | "email" | "profile" | "offline_access" | "User.Read";
 
 export interface MicrosoftStrategyOptions
   extends Omit<
@@ -47,6 +47,7 @@ export const MicrosoftStrategyDefaultScopes: MicrosoftScope[] = [
   "openid",
   "profile",
   "email",
+  "User.Read",
 ];
 export const MicrosoftStrategyDefaultName = "microsoft";
 export const MicrosoftStrategyScopeSeperator = " ";
