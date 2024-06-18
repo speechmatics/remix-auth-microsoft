@@ -1,4 +1,6 @@
 import { StrategyVerifyCallback } from "remix-auth";
+import { jwtDecode } from "jwt-decode";
+import { z } from "zod";
 
 import {
   OAuth2Profile,
@@ -26,20 +28,7 @@ export interface MicrosoftStrategyOptions
 }
 
 export interface MicrosoftProfile extends OAuth2Profile {
-  id: string;
-  displayName: string;
-  name: {
-    familyName: string;
-    givenName: string;
-  };
-  emails: [{ value: string }];
-  _json: {
-    sub: string;
-    name: string;
-    family_name: string;
-    given_name: string;
-    email: string;
-  };
+  _json: z.infer<typeof jwtSchema>;
 }
 
 export interface MicrosoftExtraParams extends Record<string, string | number> {
@@ -56,6 +45,15 @@ export const MicrosoftStrategyDefaultScopes: MicrosoftScope[] = [
 ];
 export const MicrosoftStrategyDefaultName = "microsoft";
 export const MicrosoftStrategyScopeSeperator = " ";
+
+const jwtSchema = z.object({
+  sub: z.string(),
+  upn: z.string().optional(),
+  email: z.string().optional(),
+  family_name: z.string().optional(),
+  given_name: z.string().optional(),
+  name: z.string().optional(),
+});
 
 export class MicrosoftStrategy<User> extends OAuth2Strategy<
   User,
@@ -78,7 +76,7 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
     verify: StrategyVerifyCallback<
       User,
       OAuth2StrategyVerifyParams<MicrosoftProfile, MicrosoftExtraParams>
-    >
+    >,
   ) {
     const authorizationEndpoint = policy
       ? `https://${domain}/${tenantId}/${policy}/oauth2/v2.0/authorize`
@@ -99,7 +97,7 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
   private getScope(scope: MicrosoftStrategyOptions["scopes"]) {
     if (!scope) {
       return MicrosoftStrategyDefaultScopes.join(
-        MicrosoftStrategyScopeSeperator
+        MicrosoftStrategyScopeSeperator,
       );
     } else if (typeof scope === "string") {
       return scope;
@@ -124,22 +122,32 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
   protected async userProfile({
     access_token,
   }: TokenResponseBody): Promise<MicrosoftProfile> {
-    const response = await fetch(this.userInfoEndpoint, {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
-    const data: MicrosoftProfile["_json"] = await response.json();
+    const jwtData = await jwtSchema.safeParseAsync(jwtDecode(access_token));
+    if (!jwtData.success) {
+      throw new Error("Invalid JWT");
+    }
+
+    const { name, sub, upn, email, family_name, given_name } = jwtData.data;
+
+    const emails = [];
+    if (upn) emails.push({ value: upn, type: "primary" });
+    // This is a bit hacky, but better than throwing the profile email blindly into the return
+    if (email)
+      emails.push({ value: email, type: upn ? "unverified" : "primary" });
+
     const profile: MicrosoftProfile = {
       provider: MicrosoftStrategyDefaultName,
-      displayName: data.name,
-      id: data.sub,
-      name: {
-        familyName: data.family_name,
-        givenName: data.given_name,
-      },
-      emails: [{ value: data.email }],
-      _json: data,
+      displayName: name,
+      id: sub,
+      emails,
+      name:
+        family_name || given_name
+          ? {
+              familyName: family_name,
+              givenName: given_name,
+            }
+          : undefined,
+      _json: jwtData.data,
     };
 
     return profile;
