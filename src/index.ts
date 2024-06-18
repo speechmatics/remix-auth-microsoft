@@ -1,6 +1,4 @@
 import { StrategyVerifyCallback } from "remix-auth";
-import { jwtDecode } from "jwt-decode";
-import { z } from "zod";
 
 import {
   OAuth2Profile,
@@ -28,7 +26,14 @@ export interface MicrosoftStrategyOptions
 }
 
 export interface MicrosoftProfile extends OAuth2Profile {
-  _json: z.infer<typeof jwtSchema>;
+  _json: {
+    id: string;
+    displayName: string;
+    givenName: string;
+    surname: string;
+    mail: string;
+    userPrincipalName?: string;
+  };
 }
 
 export interface MicrosoftExtraParams extends Record<string, string | number> {
@@ -46,15 +51,6 @@ export const MicrosoftStrategyDefaultScopes: MicrosoftScope[] = [
 export const MicrosoftStrategyDefaultName = "microsoft";
 export const MicrosoftStrategyScopeSeperator = " ";
 
-const jwtSchema = z.object({
-  sub: z.string(),
-  upn: z.string().optional(),
-  email: z.string().optional(),
-  family_name: z.string().optional(),
-  given_name: z.string().optional(),
-  name: z.string().optional(),
-});
-
 export class MicrosoftStrategy<User> extends OAuth2Strategy<
   User,
   MicrosoftProfile,
@@ -69,7 +65,7 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
     {
       tenantId = "common",
       domain = "login.microsoftonline.com",
-      userInfoEndpoint = "https://graph.microsoft.com/oidc/userinfo",
+      userInfoEndpoint = "https://graph.microsoft.com/v1.0/me",
       policy,
       ...options
     }: MicrosoftStrategyOptions,
@@ -109,12 +105,12 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
     // Passing the 'prompt' value is needed to get correct logout behaviour
     // https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc#send-the-sign-in-request
     if (this.prompt) {
-      params.set("prompt", this.prompt)
+      params.set("prompt", this.prompt);
     } else {
-      params.set("prompt", "")
-    };
+      params.set("prompt", "");
+    }
 
-    params.set("scope", this.scope)
+    params.set("scope", this.scope);
 
     return params;
   }
@@ -122,32 +118,44 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
   protected async userProfile({
     access_token,
   }: TokenResponseBody): Promise<MicrosoftProfile> {
-    const jwtData = await jwtSchema.safeParseAsync(jwtDecode(access_token));
-    if (!jwtData.success) {
-      throw new Error("Invalid JWT");
-    }
+    const response = await fetch(this.userInfoEndpoint, {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
+    const data: MicrosoftProfile["_json"] = await response.json();
 
-    const { name, sub, upn, email, family_name, given_name } = jwtData.data;
+    const {
+      id,
+      displayName,
+      givenName,
+      surname: familyName,
+      mail,
+      userPrincipalName,
+    } = data;
 
     const emails = [];
-    if (upn) emails.push({ value: upn, type: "primary" });
-    // This is a bit hacky, but better than throwing the profile email blindly into the return
-    if (email)
-      emails.push({ value: email, type: upn ? "unverified" : "primary" });
+    if (userPrincipalName)
+      emails.push({ value: userPrincipalName, type: "primary" });
+    if (mail)
+      emails.push({
+        value: mail,
+        type: userPrincipalName ? "secondary" : "primary",
+      });
 
-    const profile: MicrosoftProfile = {
+    const profile = {
       provider: MicrosoftStrategyDefaultName,
-      displayName: name,
-      id: sub,
+      displayName,
+      id,
       emails,
       name:
-        family_name || given_name
+        familyName || givenName
           ? {
-              familyName: family_name,
-              givenName: given_name,
+              familyName,
+              givenName,
             }
           : undefined,
-      _json: jwtData.data,
+      _json: data,
     };
 
     return profile;
