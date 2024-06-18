@@ -19,7 +19,7 @@ describe(MicrosoftStrategy, () => {
         redirectURI: "https://example.app/callback",
         scopes: ["custom"],
       },
-      verify
+      verify,
     );
 
     let request = new Request("https://example.app/auth/microsoft");
@@ -43,14 +43,14 @@ describe(MicrosoftStrategy, () => {
     }
   });
 
-  test.skip("should have the scope `openid profile email` as default", async () => {
+  test("should have the scope `openid profile email` as default", async () => {
     let strategy = new MicrosoftStrategy(
       {
         clientId: "CLIENT_ID",
         clientSecret: "CLIENT_SECRET",
         redirectURI: "https://example.app/callback",
       },
-      verify
+      verify,
     );
 
     let request = new Request("https://example.app/auth/microsoft");
@@ -70,10 +70,8 @@ describe(MicrosoftStrategy, () => {
 
       let redirectUrl = new URL(location);
 
-      console.log(redirectUrl.searchParams.toString());
-
-      expect(redirectUrl.searchParams.get("scopes")).toBe(
-        "openid profile email"
+      expect(redirectUrl.searchParams.get("scope")).toBe(
+        "openid profile email",
       );
     }
   });
@@ -85,7 +83,7 @@ describe(MicrosoftStrategy, () => {
         clientSecret: "CLIENT_SECRET",
         redirectURI: "https://example.app/callback",
       },
-      verify
+      verify,
     );
 
     let request = new Request("https://example.app/auth/microsoft");
@@ -119,7 +117,7 @@ describe(MicrosoftStrategy, () => {
         redirectURI: "https://example.app/callback",
         tenantId: "custom",
       },
-      verify
+      verify,
     );
 
     let request = new Request("https://example.app/auth/microsoft");

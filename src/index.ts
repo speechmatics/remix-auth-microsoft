@@ -110,7 +110,14 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<
   protected authorizationParams(params: URLSearchParams): URLSearchParams {
     // Passing the 'prompt' value is needed to get correct logout behaviour
     // https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc#send-the-sign-in-request
-    if (this.prompt) params.set("prompt", this.prompt);
+    if (this.prompt) {
+      params.set("prompt", this.prompt)
+    } else {
+      params.set("prompt", "")
+    };
+
+    params.set("scope", this.scope)
+
     return params;
   }
 
