@@ -8,12 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Use Node 14
-        uses: actions/setup-node@v1
+      - name: Use Node 22
+        uses: actions/setup-node@v4
         with:
-          node-version: 14
+          node-version: 22
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
@@ -26,12 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Use Node 14
-        uses: actions/setup-node@v1
+      - name: Use Node 22
+        uses: actions/setup-node@v4
         with:
-          node-version: 14
+          node-version: 22
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
@@ -44,30 +44,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Use Node 14
-        uses: actions/setup-node@v1
+      - name: Use Node 22
+        uses: actions/setup-node@v4
         with:
-          node-version: 14
+          node-version: 22
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
 
       - name: Test
-        run: npm run test -- --ci --coverage --maxWorkers=2
+        run: npm run coverage
 
   lint:
     name: Linter
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Use Node 14
-        uses: actions/setup-node@v1
+      - name: Use Node 22
+        uses: actions/setup-node@v4
         with:
-          node-version: 14
+          node-version: 22
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
