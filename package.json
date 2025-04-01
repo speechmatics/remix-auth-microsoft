@@ -6,7 +6,6 @@
   "type": "module",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "prepare": "npm run build",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "lint": "eslint --ext .ts,.tsx src/",
     "test": "vitest --config config/vitest.config.ts run",
