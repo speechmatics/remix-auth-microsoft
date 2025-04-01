@@ -28,6 +28,9 @@ export interface MicrosoftStrategyOptions {
   scopes?: MicrosoftStrategyScope[];
   tenantId?: string;
   prompt?: MicrosoftStrategyPrompt;
+  domain?: string;
+  userInfoURL?: string;
+  policy?: string;
 }
 
 export interface MicrosoftProfile {
@@ -47,8 +50,6 @@ export interface MicrosoftProfile {
   };
 }
 
-const USER_INFO_URL = "https://graph.microsoft.com/oidc/userinfo";
-
 export const MicrosoftStrategyDefaultScopes: OpenIDConnectScope[] = [
   "openid",
   "profile",
@@ -62,6 +63,7 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<User> {
 
   private readonly prompt?: string;
   private scopes: MicrosoftStrategyScope[];
+  private userInfoURL: string;
 
   constructor(
     {
@@ -71,16 +73,27 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<User> {
       scopes = MicrosoftStrategyDefaultScopes,
       prompt,
       tenantId = "common",
+      domain = "login.microsoftonline.com",
+      userInfoURL= "https://graph.microsoft.com/oidc/userinfo",
+      policy,
     }: MicrosoftStrategyOptions,
     verify: OAuth2Strategy<User>["verify"]
   ) {
+    const authorizationEndpoint = policy
+      ? `https://${domain}/${tenantId}/${policy}/oauth2/v2.0/authorize`
+      : `https://${domain}/${tenantId}/oauth2/v2.0/authorize`;
+
+    const tokenEndpoint = policy
+      ? `https://${domain}/${tenantId}/${policy}/oauth2/v2.0/token`
+      : `https://${domain}/${tenantId}/oauth2/v2.0/token`;
+
     super(
       {
         clientId,
         clientSecret,
         redirectURI,
-        authorizationEndpoint: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`,
-        tokenEndpoint: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
+        authorizationEndpoint,
+        tokenEndpoint,
         scopes,
       },
       verify
@@ -88,6 +101,7 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<User> {
 
     this.scopes = scopes;
     this.prompt = prompt;
+    this.userInfoURL = userInfoURL;
   }
 
   protected authorizationParams(params: URLSearchParams): URLSearchParams {
@@ -99,8 +113,8 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<User> {
     return params;
   }
 
-  static async userProfile(accessToken: string): Promise<MicrosoftProfile> {
-    const response = await fetch(USER_INFO_URL, {
+  async userProfile(accessToken: string): Promise<MicrosoftProfile> {
+    const response = await fetch(this.userInfoURL, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
