@@ -120,6 +120,7 @@ export class MicrosoftStrategy<User> extends OAuth2Strategy<User> {
       },
     });
     const data: MicrosoftProfile["_json"] = await response.json();
+    
     const profile: MicrosoftProfile = {
       displayName: data.name,
       id: data.sub,
